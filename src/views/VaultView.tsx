@@ -26,6 +26,8 @@ const inner = {
   border: "1px solid rgba(255,255,255,0.56)",
 } as React.CSSProperties;
 
+const RECOVERY_DELAY_SECONDS = 604800; // must match RECOVERY_DELAY in the contract
+
 const spectral = "linear-gradient(90deg, #5fbeff, #af8ff4, #f05c6b, #ffcd83, #7ef1b3)";
 
 function outcomeIcon(outcome: string) {
@@ -74,13 +76,35 @@ function AttemptRow({ attempt }: { attempt: VaultAttempt }) {
                   <code className="mono text-xs" style={{ color: "var(--ink-2)" }}>{attempt.publisher_found}</code>
                 </div>
               )}
-              {attempt.evidence_digest && (
+              {attempt.published_at && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>Published (npm time map):</span>
+                  <code className="mono text-xs" style={{ color: "var(--ink-2)" }}>{attempt.published_at}</code>
+                </div>
+              )}
+              {attempt.source_digest && (
                 <div>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>Evidence digest:</span>
-                  <code className="mono text-xs block mt-0.5 truncate" style={{ color: "var(--subtle)" }}>
-                    {attempt.evidence_digest}
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>Source digest (registry release record):</span>
+                  <code className="mono text-xs block mt-0.5 break-all" style={{ color: "var(--subtle)" }}>
+                    {attempt.source_digest}
                   </code>
                 </div>
+              )}
+              {attempt.decision_digest && (
+                <div>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>Decision digest (terms, window, inputs):</span>
+                  <code className="mono text-xs block mt-0.5 break-all" style={{ color: "var(--subtle)" }}>
+                    {attempt.decision_digest}
+                  </code>
+                </div>
+              )}
+              {attempt.evidence && (
+                <details>
+                  <summary className="text-xs cursor-pointer" style={{ color: "var(--muted)" }}>Release facts the verdict used</summary>
+                  <code className="mono text-xs block mt-1 break-all" style={{ color: "var(--subtle)" }}>
+                    {attempt.evidence}
+                  </code>
+                </details>
               )}
             </div>
           </motion.div>
@@ -206,8 +230,9 @@ function ActionSection({
             </div>
             <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
               Validators will fetch{" "}
-              <code className="mono">{`registry.npmjs.org/${vault.package}/${version || "<version>"}`}</code>{" "}
-              and verify publisher, timestamp, and semver bump.
+              <code className="mono">{`registry.npmjs.org/${vault.package}`}</code>{" "}
+              (the package document, which holds the publish-time map) and verify publisher, that the release was
+              published between acceptance and the deadline, the semver bump, and the release facts.
             </p>
           </div>
         </div>
@@ -238,6 +263,40 @@ function ActionSection({
             Claim Refund
           </button>
         )}
+
+      {/* Dispatched transfers: delivery must be proven from the contract balance before the vault is settled */}
+      {(vault.settlement_state === "PAYOUT_DISPATCHED" || vault.settlement_state === "REFUND_DISPATCHED") && (
+        <div className="rounded-2xl p-4 space-y-3" style={inner}>
+          <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
+            Transfer of {formatReward(vault.dispatched_amount)} GEN sent, delivery not confirmed yet
+          </p>
+          <p className="text-xs" style={{ color: "var(--muted)", lineHeight: 1.6 }}>
+            Value transfers are queued until the transaction finalizes. Anyone can confirm delivery once the contract
+            balance shows the GEN has left. If it never leaves, the transfer can be reopened after 7 days; it cannot be
+            paid twice while it is in this state.
+          </p>
+          <div className="flex gap-2">
+            <button
+              disabled={busy}
+              onClick={() => void doWrite("confirm_delivery", [vault.id])}
+              className="flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+              style={{ background: "var(--accent)" }}
+            >
+              Confirm delivery
+            </button>
+            {isPast(vault.dispatched_at + RECOVERY_DELAY_SECONDS) && (
+              <button
+                disabled={busy}
+                onClick={() => void doWrite("recover_dispatch", [vault.id])}
+                className="flex-1 rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                style={{ border: "1px solid var(--border)", color: "var(--ink-2)" }}
+              >
+                Reopen failed transfer
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <TxPanel stage={stage} hash={txHash} error={txError} />
     </div>

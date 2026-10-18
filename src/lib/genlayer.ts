@@ -3,7 +3,7 @@ import { studionet } from "genlayer-js/chains";
 import { TransactionStatus, ExecutionResult, TransactionHashVariant } from "genlayer-js/types";
 import type { EIP1193Provider } from "viem";
 import { CONTRACT_ADDRESS, EXPLORER_URL, isConfigured } from "@/config/chains";
-import type { Vault, VaultAttempt } from "./types";
+import type { Settlement, Vault, VaultAttempt } from "./types";
 
 const readClient = createClient({ chain: studionet });
 
@@ -30,6 +30,7 @@ export const api = {
   vault: (id: string) => read<Vault>("get_vault", [id]),
   attempts: (id: string) => read<VaultAttempt[]>("get_attempts", [id]),
   forWallet: (address: string) => read<Vault[]>("get_for_wallet", [address]),
+  settlement: () => read<Settlement>("get_settlement"),
   claimable: async (address: string) =>
     (await read<{ claimable: string }>("get_claimable", [address])).claimable,
 };

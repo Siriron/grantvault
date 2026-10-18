@@ -7,8 +7,10 @@ const statusMap: Record<string, { label: string; color: string; bg: string }> = 
   GRANTED:          { label: "Granted",     color: "#1a8047", bg: "rgba(26,128,71,0.10)" },
   NOT_GRANTED:      { label: "Not Granted", color: "#ba2b4c", bg: "rgba(186,43,76,0.10)" },
   INCONCLUSIVE:     { label: "Inconclusive",color: "#7c4a00", bg: "rgba(255,165,0,0.12)" },
-  PAYOUT_DISPATCHED:{ label: "Paid Out",    color: "#1a8047", bg: "rgba(26,128,71,0.10)" },
-  REFUND_DISPATCHED:{ label: "Refunded",    color: "#6b6580", bg: "rgba(107,101,128,0.10)" },
+  PAYOUT_DISPATCHED:{ label: "Payout sent, unconfirmed", color: "#7c4a00", bg: "rgba(255,165,0,0.12)" },
+  REFUND_DISPATCHED:{ label: "Refund sent, unconfirmed", color: "#7c4a00", bg: "rgba(255,165,0,0.12)" },
+  PAYOUT_SETTLED:   { label: "Paid Out",    color: "#1a8047", bg: "rgba(26,128,71,0.10)" },
+  REFUND_SETTLED:   { label: "Refunded",    color: "#6b6580", bg: "rgba(107,101,128,0.10)" },
 };
 
 const fallback = { label: "", color: "#6b6580", bg: "rgba(107,101,128,0.10)" };

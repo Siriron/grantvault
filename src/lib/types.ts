@@ -25,6 +25,14 @@ export type Vault = {
   settlement_state: SettlementState;
   refund_dispatched: boolean;
   dispatched_amount: string;
+  dispatched_at: number;
+  recoveries: number;
+};
+
+export type Settlement = {
+  balance: string;
+  liability: string;
+  in_flight: string;
 };
 
 export type VaultAttempt = {
@@ -33,7 +41,10 @@ export type VaultAttempt = {
   explanation: string;
   at: number;
   publisher_found: string;
-  evidence_digest: string;
+  published_at: string;
+  source_digest: string;
+  decision_digest: string;
+  evidence: string;
 };
 
 export type TxStage =

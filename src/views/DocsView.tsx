@@ -13,18 +13,20 @@ const methods: Array<[string, string, string]> = [
   ["create_vault(maintainer, package, publisher_name, min_bump, deadline, description)", "Funder, payable", "Locks the attached GEN and the grant terms. Terms cannot change afterwards."],
   ["accept_grant(vault_id)", "Maintainer", "Accepts the terms; the funder can no longer cancel."],
   ["cancel_vault(vault_id)", "Funder", "Cancels a vault the maintainer has not accepted; makes the reward refundable."],
-  ["evaluate_release(vault_id, version)", "Maintainer", "Validators fetch the npm registry and reach consensus on GRANTED, NOT_GRANTED or INCONCLUSIVE."],
+  ["evaluate_release(vault_id, version)", "Maintainer", "Validators fetch the package-level npm document, check publisher, the accepted-to-deadline window and the semver bump, judge release facts, and reach consensus on GRANTED, NOT_GRANTED or INCONCLUSIVE."],
   ["close_expired(vault_id)", "Anyone", "After the deadline, expires an OPEN or ACTIVE vault and makes the reward refundable."],
-  ["claim_funds(vault_id)", "Maintainer or funder", "One-shot payout (GRANTED) or refund (cancelled/expired). Balance is zeroed before the transfer."],
-  ["get_vault, get_attempts, get_for_wallet, get_claimable", "Read-only", "JSON-string views used by this app."],
+  ["claim_funds(vault_id)", "Maintainer or funder", "Dispatches the payout (GRANTED) or refund (cancelled/expired) once. The entitlement is debited first and only one dispatch can be in flight."],
+  ["confirm_delivery(vault_id)", "Anyone", "Settles the vault only when the contract balance proves the GEN left; until then the vault stays in a dispatched state."],
+  ["recover_dispatch(vault_id)", "Anyone", "After 7 days, and only if the balance shows nothing left, reopens a stuck dispatch so it can be claimed again."],
+  ["get_vault, get_attempts, get_for_wallet, get_claimable, get_settlement", "Read-only", "JSON-string views used by this app."],
 ];
 
 const faqs: Array<[string, string]> = [
-  ["What does INCONCLUSIVE mean?", "Reliable registry evidence could not be obtained (registry down, record incomplete, bump undeterminable). No funds move and the same version can be submitted again."],
+  ["What does INCONCLUSIVE mean?", "Reliable evidence could not be obtained (registry down, version not in the registry yet, record incomplete, bump undeterminable, or the registry facts cannot show what the description promises). No funds move and the same version can be submitted again."],
   ["What happens after NOT_GRANTED?", "That version is sealed for this vault. The vault stays active, so the maintainer can submit a different version before the deadline."],
   ["Who decides the outcome?", "Nobody. There is no administrator or off-chain operator; GenLayer validators independently re-derive the verdict and must agree."],
   ["Can the funder take the money back after acceptance?", "No. After acceptance the funder can only reclaim the reward once the vault expires without a granted release."],
-  ["Which packages are supported?", "Public npm packages. The registry URL is built by the contract from the locked package name and the submitted version; callers cannot supply a URL."],
+  ["Which packages are supported?", "Public npm packages. The registry URL is built by the contract from the locked package name; callers cannot supply a URL. Only a release published after the maintainer accepted the grant, and before the deadline, can qualify."],
 ];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
