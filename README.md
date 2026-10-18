@@ -136,7 +136,7 @@ Evidence content is wrapped with `<<<UNTRUSTED_..._START/END>>>` delimiters. Pac
 | RPC | `https://studio.genlayer.com/api` |
 | Explorer | `https://explorer-studio.genlayer.com` |
 | Contract | `contracts/grantvault.py` |
-| Deployed address | [`0x66c85966A4fCfBEEAc43152F0188fb468CC6BD87`](https://explorer-studio.genlayer.com/address/0x66c85966A4fCfBEEAc43152F0188fb468CC6BD87) (set in `src/config/chains.ts`). StudioNet is temporary: addresses may not survive resets, so the repository tests are the proof of behavior, not the address. |
+| Deployed address | Set in `src/config/chains.ts`. The contract in this repo changed its ABI (`confirm_delivery`, `recover_dispatch`, `get_settlement`, new attempt fields); redeploy and update that constant before using the app. StudioNet is a temporary network, so the repository tests are the proof of behavior, not an address. |
 
 ---
 
@@ -154,6 +154,20 @@ export const CONTRACT_ADDRESS = "0xYOUR_DEPLOYED_ADDRESS" as `0x${string}`;
 Connect MetaMask or Rabby to chain ID 61999 (`https://studio.genlayer.com/api`).
 
 ---
+
+## Test guide
+
+Open **Test guide** in the app header. Pick a scenario from the dropdown, enter the maintainer wallet (a second wallet) and follow the steps. The create form opens pre-filled, the evaluate form opens with the right version, each step turns green only when the contract shows the result, and every confirmed transaction is logged with its hash, status and execution result (copy it with one button).
+
+| Scenario | What it proves | Needs npm publishing |
+|---|---|---|
+| A | A real old release (is-odd 3.0.1) is `NOT_GRANTED`: published before acceptance | no |
+| B | Wrong npm publisher is `NOT_GRANTED` | no |
+| C | A version not on npm (99.0.0) is `INCONCLUSIVE` | no |
+| D | Granted release, payout, delivery confirmation (your own package) | yes, after acceptance |
+| E | Cancel, refund, delivery confirmation | no |
+
+Test vaults carry a `gv-<run>-<scenario>` tag in their description, which is how the guide finds them on-chain. The log and run ID live in this browser only (localStorage). The funder and maintainer must be different wallets; the funder needs a little GEN on StudioNet (the pre-filled reward is 0.01 GEN).
 
 ## Contract tests
 

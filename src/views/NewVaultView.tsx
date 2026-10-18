@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Package, Info } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
@@ -7,6 +7,7 @@ import { isValidGen, weiFromGen } from "@/lib/format";
 import { TxPanel } from "@/components/TxPanel";
 import type { TxStage } from "@/lib/types";
 import { ensureStudionet } from "@/lib/wallet";
+import { clearPrefill, readPrefill } from "@/lib/guide";
 
 const glass = {
   background: "rgba(255,255,255,0.72)",
@@ -54,13 +55,16 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 export function NewVaultView({ onBack, onCreated }: { onBack: () => void; onCreated: (id: string) => void }) {
   const { address, provider } = useWallet();
-  const [pkg, setPkg] = useState("");
-  const [maintainer, setMaintainer] = useState("");
-  const [pubName, setPubName] = useState("");
-  const [minBump, setMinBump] = useState<MinBump>("minor");
-  const [deadlineDays, setDeadlineDays] = useState("30");
-  const [rewardGen, setRewardGen] = useState("");
-  const [description, setDescription] = useState("");
+  // Values pre-filled by the test guide (read once; cleared on mount so a normal visit starts empty).
+  const [pre] = useState(readPrefill);
+  useEffect(() => { clearPrefill(); }, []);
+  const [pkg, setPkg] = useState(pre?.pkg ?? "");
+  const [maintainer, setMaintainer] = useState(pre?.maintainer ?? "");
+  const [pubName, setPubName] = useState(pre?.pubName ?? "");
+  const [minBump, setMinBump] = useState<MinBump>(pre?.minBump ?? "minor");
+  const [deadlineDays, setDeadlineDays] = useState(pre?.deadlineDays ?? "30");
+  const [rewardGen, setRewardGen] = useState(pre?.rewardGen ?? "");
+  const [description, setDescription] = useState(pre?.description ?? "");
   const [stage, setStage] = useState<TxStage>("idle");
   const [txHash, setTxHash] = useState("");
   const [txError, setTxError] = useState("");
@@ -138,6 +142,11 @@ export function NewVaultView({ onBack, onCreated }: { onBack: () => void; onCrea
       </button>
 
       <div className="mb-6">
+        {pre && (
+          <p className="text-xs font-semibold mb-1" style={{ color: "var(--accent)" }}>
+            Pre-filled by the test guide. Review the values, then lock the GEN.
+          </p>
+        )}
         <h2 className="display text-2xl font-bold" style={{ color: "var(--ink)", letterSpacing: "-0.03em" }}>
           New Vault
         </h2>

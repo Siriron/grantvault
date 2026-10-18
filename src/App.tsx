@@ -6,14 +6,16 @@ import { HomeView } from "@/views/HomeView";
 import { NewVaultView } from "@/views/NewVaultView";
 import { VaultView } from "@/views/VaultView";
 import { DocsView } from "@/views/DocsView";
+import { GuideView } from "@/views/GuideView";
 import { shortAddress } from "@/lib/format";
-import { Package, LogOut, AlertCircle, BookOpen } from "lucide-react";
+import { Package, LogOut, AlertCircle, BookOpen, FlaskConical } from "lucide-react";
 
 
 type View =
   | { name: "home" }
   | { name: "new" }
   | { name: "docs" }
+  | { name: "guide" }
   | { name: "vault"; id: string }
   | { name: "notfound" };
 
@@ -23,6 +25,7 @@ function parseHash(hash: string): View {
   if (path === "/") return { name: "home" };
   if (path === "/new") return { name: "new" };
   if (path === "/docs") return { name: "docs" };
+  if (path === "/guide") return { name: "guide" };
   const m = /^\/vault\/(\d+)$/.exec(path);
   if (m) return { name: "vault", id: m[1] };
   return { name: "notfound" };
@@ -43,7 +46,7 @@ function useRoute(): [View, (to: string) => void] {
 
 const spectral = "linear-gradient(90deg, #5fbeff, #af8ff4, #f05c6b, #ffcd83, #7ef1b3)";
 
-function Header({ onHome, onDocs }: { onHome: () => void; onDocs: () => void }) {
+function Header({ onHome, onDocs, onGuide }: { onHome: () => void; onDocs: () => void; onGuide: () => void }) {
   const { address, connected, disconnect, onStudionet } = useWallet();
   return (
     <header className="relative z-20 flex items-center justify-between px-4 py-4 max-w-md mx-auto">
@@ -65,6 +68,13 @@ function Header({ onHome, onDocs }: { onHome: () => void; onDocs: () => void }) 
           style={{ color: "var(--ink-2)" }}
         >
           <BookOpen className="size-3.5" /> Docs
+        </button>
+        <button
+          onClick={onGuide}
+          className="flex items-center gap-1 text-xs font-medium opacity-70 hover:opacity-100 transition-opacity"
+          style={{ color: "var(--ink-2)" }}
+        >
+          <FlaskConical className="size-3.5" /> Test guide
         </button>
       </div>
 
@@ -158,7 +168,7 @@ function App() {
       <div className="fixed top-0 left-0 right-0 h-0.5 z-30" style={{ background: spectral }} />
 
       <div className="relative z-10">
-        <Header onHome={() => go("/")} onDocs={() => go("/docs")} />
+        <Header onHome={() => go("/")} onDocs={() => go("/docs")} onGuide={() => go("/guide")} />
 
         <main className="mx-auto max-w-md px-4 pb-16 pt-2">
           <AnimatePresence mode="wait">
@@ -189,6 +199,11 @@ function App() {
             {view.name === "docs" && (
               <motion.div key="docs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <DocsView onBack={() => go("/")} />
+              </motion.div>
+            )}
+            {view.name === "guide" && (
+              <motion.div key="guide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <GuideView onBack={() => go("/")} go={go} />
               </motion.div>
             )}
             {view.name === "notfound" && (

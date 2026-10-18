@@ -4,6 +4,7 @@ import { TransactionStatus, ExecutionResult, TransactionHashVariant } from "genl
 import type { EIP1193Provider } from "viem";
 import { CONTRACT_ADDRESS, EXPLORER_URL, isConfigured } from "@/config/chains";
 import type { Settlement, Vault, VaultAttempt } from "./types";
+import { recordTx } from "./guide";
 
 const readClient = createClient({ chain: studionet });
 
@@ -101,10 +102,12 @@ export function executionFailed(r: Receipt) {
 function finalOutcome(
   hash: string,
   receipt: Receipt,
+  label: string,
   onProgress?: (p: WriteProgress) => void
 ) {
   if (executionFailed(receipt)) {
     const execution = receiptExecution(receipt);
+    recordTx(label, hash, "FAILED", execution || "FINISHED_WITH_ERROR");
     onProgress?.({ hash, status: "FAILED", execution, error: "GenVM execution failed." });
     throw new ExecutionFailedError(
       hash,
@@ -127,6 +130,7 @@ function finalOutcome(
     );
   }
   const execution = receiptExecution(receipt);
+  recordTx(label, hash, "FINALIZED", execution);
   onProgress?.({ hash, status: "FINALIZED", execution });
   return { hash, status: "FINALIZED" as const, execution, explorer: `${EXPLORER_URL}/tx/${hash}` };
 }
@@ -134,6 +138,7 @@ function finalOutcome(
 async function waitForFinalization(
   client: ReturnType<typeof createClient>,
   hash: string,
+  label: string,
   onProgress?: (p: WriteProgress) => void
 ) {
   try {
@@ -143,7 +148,7 @@ async function waitForFinalization(
       retries: 450,
       interval: 4000,
     })) as unknown as Receipt;
-    return finalOutcome(hash, receipt, onProgress);
+    return finalOutcome(hash, receipt, label, onProgress);
   } catch (err) {
     if (err instanceof ExecutionFailedError) throw err;
     onProgress?.({
@@ -179,6 +184,7 @@ export async function write(
       value,
     })
   );
+  const label = name === "create_vault" ? "create_vault" : `${name} (vault ${typeof args[0] === "string" ? args[0] : ""})`;
   onProgress?.({ hash, status: "SUBMITTED" });
   let accepted: Receipt;
   try {
@@ -202,12 +208,15 @@ export async function write(
   if (receiptStatus(accepted) === String(TransactionStatus.ACCEPTED)) {
     const execution = receiptExecution(accepted);
     onProgress?.({ hash, status: "ACCEPTED", execution });
-    if (executionFailed(accepted))
+    if (executionFailed(accepted)) {
+      recordTx(label, hash, "FAILED", execution || "FINISHED_WITH_ERROR");
       throw new ExecutionFailedError(
         hash,
         execution || "FINISHED_WITH_ERROR",
         "Transaction accepted with a contract execution error."
       );
+    }
+    recordTx(label, hash, "ACCEPTED", execution);
   } else {
     onProgress?.({
       hash,
@@ -216,5 +225,5 @@ export async function write(
       error: `GenLayer status: ${receiptStatus(accepted) || "unknown"}`,
     });
   }
-  return waitForFinalization(client, hash, onProgress);
+  return waitForFinalization(client, hash, label, onProgress);
 }

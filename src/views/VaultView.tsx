@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { TxPanel } from "@/components/TxPanel";
 import type { Vault, VaultAttempt, TxStage } from "@/lib/types";
 import { EXPLORER_URL } from "@/config/chains";
+import { SCENARIOS, parseTag, suggestedVersion } from "@/lib/guide";
 
 const glass = {
   background: "rgba(255,255,255,0.72)",
@@ -129,7 +130,7 @@ function ActionSection({
   const [txHash, setTxHash] = useState("");
   const [txError, setTxError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [version, setVersion] = useState("");
+  const [version, setVersion] = useState(() => suggestedVersion(vault));
 
   const isFunder = address.toLowerCase() === vault.funder.toLowerCase();
   const isMaintainer = address.toLowerCase() === vault.maintainer.toLowerCase();
@@ -371,6 +372,19 @@ export function VaultView({ vaultId, onBack }: { vaultId: string; onBack: () => 
           <RefreshCw className="size-4" />
         </button>
       </div>
+
+      {(() => {
+        const tag = parseTag(vault.description);
+        const sc = tag ? SCENARIOS.find((s) => s.key === tag.key) : undefined;
+        if (!sc) return null;
+        return (
+          <div className="rounded-2xl p-3" style={{ background: "rgba(95,190,255,0.10)", border: "1px solid rgba(95,190,255,0.28)" }}>
+            <p className="text-xs font-semibold" style={{ color: "var(--ink)" }}>Test vault · {sc.label}</p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted)", lineHeight: 1.5 }}>Expected: {sc.expected}</p>
+            <a href="#/guide" className="text-xs font-semibold mt-1 inline-block" style={{ color: "var(--accent)" }}>Back to the test guide</a>
+          </div>
+        );
+      })()}
 
       {/* Hero card */}
       <div className="rounded-3xl overflow-hidden" style={{ ...glass, border: isPayable ? "none" : glass.border }}>
