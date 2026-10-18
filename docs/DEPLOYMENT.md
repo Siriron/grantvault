@@ -9,10 +9,10 @@
 3. Click **Deploy** — no constructor arguments required.
 4. Copy the deployed contract address.
 
-The contract in this repository has a new ABI (`confirm_delivery`, `recover_dispatch`, `get_settlement`, new attempt and vault fields). The address below is the earlier deployment; it predates these changes, so deploy the current file and update `src/config/chains.ts` before using the app. StudioNet is a temporary network: addresses may not survive resets, so the repository tests are the proof of behavior, not the address.
+StudioNet is a temporary network: addresses may not survive resets, so the repository tests are the proof of behavior, not the address. The current contract (with `confirm_delivery`, `recover_dispatch`, `get_settlement`) is deployed at the address below. The earlier deployment `0xeA2107a2c4Dd3d58cD296E42771EeA7caAf45Add` has an older ABI and must not be used. No transaction against the new address is recorded yet; see docs/E2E_STUDIONET.md.
 
 ```
-Superseded address (old ABI, do not use): 0xeA2107a2c4Dd3d58cD296E42771EeA7caAf45Add
+Production address: 0x66c85966A4fCfBEEAc43152F0188fb468CC6BD87 (https://explorer-studio.genlayer.com/address/0x66c85966A4fCfBEEAc43152F0188fb468CC6BD87)
 Network: GenLayer Studionet
 Chain ID: 61999
 RPC: https://studio.genlayer.com/api

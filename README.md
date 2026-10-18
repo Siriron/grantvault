@@ -136,7 +136,7 @@ Evidence content is wrapped with `<<<UNTRUSTED_..._START/END>>>` delimiters. Pac
 | RPC | `https://studio.genlayer.com/api` |
 | Explorer | `https://explorer-studio.genlayer.com` |
 | Contract | `contracts/grantvault.py` |
-| Deployed address | Set in `src/config/chains.ts`. The contract in this repo changed its ABI (`confirm_delivery`, `recover_dispatch`, `get_settlement`, new attempt fields); redeploy and update that constant before using the app. StudioNet is a temporary network, so the repository tests are the proof of behavior, not an address. |
+| Deployed address | [`0x66c85966A4fCfBEEAc43152F0188fb468CC6BD87`](https://explorer-studio.genlayer.com/address/0x66c85966A4fCfBEEAc43152F0188fb468CC6BD87) (set in `src/config/chains.ts`). StudioNet is temporary: addresses may not survive resets, so the repository tests are the proof of behavior, not the address. |
 
 ---
 
