@@ -67,8 +67,10 @@ export function GuideView({ onBack, go }: { onBack: () => void; go: (to: string)
       const found = (Array.isArray(list) ? list : [])
         .filter((v) => v.description.includes(tag))
         .sort((a, b) => Number(b.id) - Number(a.id))[0] ?? null;
+      // Read the attempts first and set both together, so a step never shows green without its verdict.
+      const atts = found ? ((await api.attempts(found.id)) ?? []) : [];
       setVault(found);
-      setAttempts(found ? ((await api.attempts(found.id)) ?? []) : []);
+      setAttempts(atts);
       setLoadErr("");
     } catch (e) {
       setLoadErr(errorMessage(e, "Could not read the contract"));
@@ -146,7 +148,9 @@ export function GuideView({ onBack, go }: { onBack: () => void; go: (to: string)
     done: !!vault && vault.accepted_at > 0,
     action: vault ? { label: "Open vault", run: openVault } : undefined,
   };
-  const evalDetail = last ? `${last.outcome}: ${vault?.explanation ?? ""}` : undefined;
+  const evalDetail = last
+    ? `${last.outcome}: ${last.explanation || vault?.explanation || ""}`
+    : vault && vault.attempt_count > 0 ? "Verdict not loaded yet. Press Refresh." : undefined;
   const evaluateStep = (n: number, version: string): Step => ({
     n, title: "Submit the release for judgment", who: "maintainer",
     what: `As the maintainer, open the vault, enter version ${version} (pre-filled) and press Evaluate. Validators fetch registry.npmjs.org/${vault?.package ?? "<package>"} and reach consensus; allow a few minutes.`,
