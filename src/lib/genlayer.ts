@@ -175,8 +175,9 @@ export async function write(
   if (!isConfigured()) throw new Error("Contract address not configured");
   // account is the plain wallet address (never createAccount(address): that expects a private key).
   const client = createClient({ chain: studionet, account: address, provider });
-  const connect = (client as unknown as { connect?: (network: string) => Promise<void> }).connect;
-  if (typeof connect === "function") await connect.call(client, "studionet");
+  // Do NOT call client.connect("studionet"): in genlayer-js 1.x it runs a MetaMask-Snap check
+  // (wallet_getSnaps / wallet_requestSnaps), which non-MetaMask wallets and mobile browsers reject.
+  // Callers run ensureStudionet() immediately before every write instead.
   let hash: string;
   try {
     hash = String(
