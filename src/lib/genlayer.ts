@@ -5,6 +5,7 @@ import type { EIP1193Provider } from "viem";
 import { CONTRACT_ADDRESS, EXPLORER_URL, isConfigured } from "@/config/chains";
 import type { Settlement, Vault, VaultAttempt } from "./types";
 import { recordTx } from "./guide";
+import { errorMessage } from "./format";
 
 const readClient = createClient({ chain: studionet });
 
@@ -154,7 +155,7 @@ async function waitForFinalization(
     onProgress?.({
       hash,
       status: "TRACKING",
-      error: err instanceof Error ? err.message : String(err),
+      error: errorMessage(err),
     });
     throw new SubmittedTransactionError(
       hash,
@@ -176,14 +177,20 @@ export async function write(
   const client = createClient({ chain: studionet, account: address, provider });
   const connect = (client as unknown as { connect?: (network: string) => Promise<void> }).connect;
   if (typeof connect === "function") await connect.call(client, "studionet");
-  const hash = String(
-    await client.writeContract({
-      address: CONTRACT_ADDRESS,
-      functionName: name,
-      args: args as never,
-      value,
-    })
-  );
+  let hash: string;
+  try {
+    hash = String(
+      await client.writeContract({
+        address: CONTRACT_ADDRESS,
+        functionName: name,
+        args: args as never,
+        value,
+      })
+    );
+  } catch (err) {
+    // Nothing was submitted (wallet rejection, insufficient balance, RPC refusal): show the real reason.
+    throw new Error(`${name} was not submitted: ${errorMessage(err)}`);
+  }
   const label = name === "create_vault" ? "create_vault" : `${name} (vault ${typeof args[0] === "string" ? args[0] : ""})`;
   onProgress?.({ hash, status: "SUBMITTED" });
   let accepted: Receipt;
@@ -198,7 +205,7 @@ export async function write(
     onProgress?.({
       hash,
       status: "TRACKING",
-      error: err instanceof Error ? err.message : String(err),
+      error: errorMessage(err),
     });
     throw new SubmittedTransactionError(
       hash,

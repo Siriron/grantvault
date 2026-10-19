@@ -8,6 +8,7 @@ import { TxPanel } from "@/components/TxPanel";
 import type { TxStage } from "@/lib/types";
 import { ensureStudionet } from "@/lib/wallet";
 import { clearPrefill, readPrefill } from "@/lib/guide";
+import { errorMessage } from "@/lib/format";
 
 const glass = {
   background: "rgba(255,255,255,0.72)",
@@ -109,7 +110,7 @@ export function NewVaultView({ onBack, onCreated }: { onBack: () => void; onCrea
       }
     } catch (e) {
       setStage("failed");
-      setTxError(e instanceof Error ? e.message : String(e));
+      setTxError(errorMessage(e));
     } finally {
       setBusy(false);
     }

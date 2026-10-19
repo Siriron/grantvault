@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { errorMessage } from "@/lib/format";
 import { motion } from "framer-motion";
 import { Package, Plus, Wallet, AlertTriangle } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
@@ -29,7 +30,7 @@ export function HomeView({ onNew, onVault }: { onNew: () => void; onVault: (id: 
       const data = await api.forWallet(address);
       setVaults(Array.isArray(data) ? data : []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load vaults");
+      setError(errorMessage(e, "Failed to load vaults"));
     } finally {
       setLoading(false);
     }

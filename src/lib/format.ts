@@ -57,3 +57,41 @@ export function weiFromGen(gen: string): bigint {
   const [whole, frac = ""] = gen.split(".");
   return BigInt(whole) * 10n ** 18n + BigInt(frac.padEnd(18, "0"));
 }
+
+// Readable text for any thrown value. Wallet and RPC errors are often plain objects, not Error instances,
+// which used to render as "[object Object]".
+export function errorMessage(e: unknown, fallback = "Unknown error"): string {
+  const seen = new Set<unknown>();
+  const pick = (v: unknown, depth: number): string => {
+    if (v == null || depth > 4 || seen.has(v)) return "";
+    if (typeof v === "string") return v;
+    if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return v.toString();
+    if (typeof v !== "object") return "";
+    seen.add(v);
+    const o = v as Record<string, unknown>;
+    for (const k of ["shortMessage", "details", "reason", "message"]) {
+      const s = o[k];
+      if (typeof s === "string" && s.trim()) return s;
+    }
+    for (const k of ["error", "data", "cause", "info"]) {
+      const s = pick(o[k], depth + 1);
+      if (s) return s;
+    }
+    try {
+      const j = JSON.stringify(v);
+      return j && j !== "{}" ? j.slice(0, 400) : "";
+    } catch {
+      return "";
+    }
+  };
+  const msg = pick(e, 0).trim() || fallback;
+  const code = e && typeof e === "object" ? (e as { code?: unknown }).code : undefined;
+  const low = msg.toLowerCase();
+  if (code === 4001 || low.includes("user rejected") || low.includes("user denied")) {
+    return "You rejected the request in the wallet.";
+  }
+  if (low.includes("insufficient funds") || low.includes("insufficient balance")) {
+    return `Wallet balance is too low for the reward plus fees. (${msg})`;
+  }
+  return msg;
+}

@@ -7,7 +7,7 @@ import {
 import { useWallet } from "@/hooks/useWallet";
 import { api, write } from "@/lib/genlayer";
 import { ensureStudionet } from "@/lib/wallet";
-import { formatReward, formatDeadline, formatDate, isPast, shortAddress, bumpLabel } from "@/lib/format";
+import { formatReward, formatDeadline, formatDate, isPast, shortAddress, bumpLabel, errorMessage } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TxPanel } from "@/components/TxPanel";
 import type { Vault, VaultAttempt, TxStage } from "@/lib/types";
@@ -160,7 +160,7 @@ function ActionSection({
       );
     } catch (e) {
       setStage("failed");
-      setTxError(e instanceof Error ? e.message : String(e));
+      setTxError(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -320,7 +320,7 @@ export function VaultView({ vaultId, onBack }: { vaultId: string; onBack: () => 
       setVault(v);
       setAttempts(Array.isArray(a) ? a : []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load vault");
+      setError(errorMessage(e, "Failed to load vault"));
     } finally {
       setLoading(false);
     }

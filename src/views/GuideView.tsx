@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Copy, RefreshCw } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { api } from "@/lib/genlayer";
 import { EXPLORER_URL } from "@/config/chains";
-import { shortAddress } from "@/lib/format";
+import { errorMessage, shortAddress } from "@/lib/format";
 import type { MinBump, Vault, VaultAttempt } from "@/lib/types";
 import {
   SCENARIOS, clearRun, getRun, newRun, prefillFor, readTxLog, resumeRun, saveRun, setPrefill, tagFor, txLogText,
@@ -71,7 +71,7 @@ export function GuideView({ onBack, go }: { onBack: () => void; go: (to: string)
       setAttempts(found ? ((await api.attempts(found.id)) ?? []) : []);
       setLoadErr("");
     } catch (e) {
-      setLoadErr(e instanceof Error ? e.message : "Could not read the contract");
+      setLoadErr(errorMessage(e, "Could not read the contract"));
     }
   }, [connected, address, tag]);
 
